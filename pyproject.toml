@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "4ward"
+version = "0.1.0"
+description = ""
+authors = ["o3etornam <03etornam@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = {extras = ["standard"], version = "^0.115.0"}
+pydantic-settings = "^2.5.2"
+cachetools = "^5.5.0"
+pycryptodome = "^3.21.0"
+loguru = "^0.7.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
