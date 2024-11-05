@@ -48,7 +48,7 @@ async def service_interaction(request: HubtelRequest):
         response["Message"] = (
             f"An error occurred while processing your request. \nDetails: {e.detail}"
         )
-        # response["Type"] = "release"
+        response["Type"] = "release"
         response["DataType"] = "display"
         response["FieldType"] = "text"
         return response
@@ -60,7 +60,7 @@ async def service_interaction(request: HubtelRequest):
         response["Message"] = (
             f"An unexpected error occurred. Please contact customer care at {CUSTOMER_CARE_NUMBER} for assistance. Details: {str(e)}"
         )
-        # response["Type"] = "release"
+        response["Type"] = "release"
         response["DataType"] = "display"
         response["FieldType"] = "text"
         return response
