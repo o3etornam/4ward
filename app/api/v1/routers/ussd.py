@@ -1,5 +1,6 @@
+import socket
 from cachetools import TTLCache
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from loguru import logger
 
 from core.config import settings
@@ -15,6 +16,16 @@ cache = TTLCache(maxsize=100, ttl=300)
 router = APIRouter(prefix="/api/v1")
 
 CUSTOMER_CARE_NUMBER = settings.customer_care
+
+
+@router.get("/service-ip", tags=["Health"])
+async def get_service_ip(request: Request):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    server_ip = s.getsockname()[0]
+    s.close()
+
+    return {"server_ip": server_ip}
 
 
 @router.post("/callback", response_model=HubtelResponse, tags=["Service Interaction"])
@@ -51,6 +62,7 @@ async def service_interaction(request: HubtelRequest):
         response["Type"] = "release"
         response["DataType"] = "display"
         response["FieldType"] = "text"
+        cache.pop(request.SessionId)
         return response
 
     except Exception as e:
@@ -63,6 +75,7 @@ async def service_interaction(request: HubtelRequest):
         response["Type"] = "release"
         response["DataType"] = "display"
         response["FieldType"] = "text"
+        cache.pop(request.SessionId)
         return response
 
 

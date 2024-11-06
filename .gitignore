@@ -1,3 +1,7 @@
 .venv/
 .env
 **__pycache__/
+fly.toml
+Dockerfile
+.github
+.dockerignore
