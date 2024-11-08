@@ -1,6 +1,6 @@
-import socket
 from cachetools import TTLCache
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException
+from httpx import AsyncClient
 from loguru import logger
 
 from core.config import settings
@@ -12,20 +12,20 @@ from services.laison import (
 )
 from services.hubtel import hubtel_confirmation, send_customer_sms
 
-cache = TTLCache(maxsize=100, ttl=300)
+cache = TTLCache(maxsize=100, ttl=600)
 router = APIRouter(prefix="/api/v1")
 
 CUSTOMER_CARE_NUMBER = settings.customer_care
 
 
-@router.get("/service-ip", tags=["Health"])
-async def get_service_ip(request: Request):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.connect(("8.8.8.8", 80))
-    server_ip = s.getsockname()[0]
-    s.close()
-
-    return {"server_ip": server_ip}
+@router.get("/check-server-ip", tags=["Health"])
+async def get_service_ip(url: str):
+    try:
+        async with AsyncClient() as client:
+            res = await client.post(url=url)
+            return {"message": res.json()}
+    except Exception:
+        return {"message": res.status_code}
 
 
 @router.post("/callback", response_model=HubtelResponse, tags=["Service Interaction"])
@@ -38,6 +38,7 @@ async def service_interaction(request: HubtelRequest):
         )
 
         if request.Sequence == 2:
+            response["Type"] = "response"
             response["Message"] = await get_customer_by_meter_number(request.Message)
             cache[request.SessionId] = request.Message
             logger.info(
@@ -45,10 +46,21 @@ async def service_interaction(request: HubtelRequest):
             )
 
         if request.Sequence == 3:
-            response["Item"]["Price"] = request.Message
-            logger.info(
-                f"Price updated for SessionId {request.SessionId}: {request.Message}"
+            if int(request.Message) > 9:
+                response["Item"]["Price"] = request.Message
+                response["Type"] = "AddToCart"
+                logger.info(
+                    f"Price updated for SessionId {request.SessionId}: {request.Message}"
+                )
+
+                return response
+            response["Type"] = "release"
+            response["Message"] = (
+                "The amount entered is below the minimum required. Please enter an amount greater than GHC 10.00"
             )
+            response["Item"] = None
+            response["DataType"] = "display"
+            response["FieldType"] = "text"
 
         return response
 
@@ -62,8 +74,6 @@ async def service_interaction(request: HubtelRequest):
         response["Type"] = "release"
         response["DataType"] = "display"
         response["FieldType"] = "text"
-        if cache.get(request.SessionId):
-            cache.pop(request.SessionId)
         return response
 
     except Exception as e:
@@ -76,8 +86,6 @@ async def service_interaction(request: HubtelRequest):
         response["Type"] = "release"
         response["DataType"] = "display"
         response["FieldType"] = "text"
-        if cache.get(request.SessionId):
-            cache.pop(request.SessionId)
         return response
 
 

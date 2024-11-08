@@ -84,6 +84,8 @@ async def hubtel_confirmation(session_id: str, order_id: str, status: str):
     headers = {
         "Connection": settings.connection,
         "Authorization": f"Basic endjeOBiZHhza250fT3={settings.hubtel_api_key}",
+        "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
     }
 
     body = HubtelCallBackRequest(
