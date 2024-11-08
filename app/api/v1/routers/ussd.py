@@ -46,19 +46,22 @@ async def service_interaction(request: HubtelRequest):
             )
 
         if request.Sequence == 3:
-            if int(request.Message) > 9:
-                response["Item"]["Price"] = request.Message
+            if int(request.Message) >= 10:
                 response["Type"] = "AddToCart"
+                response["Message"] = (
+                    "The request has been submitted. Please wait for a payment prompt soon"
+                )
+                response["Item"]["Price"] = request.Message
                 logger.info(
                     f"Price updated for SessionId {request.SessionId}: {request.Message}"
                 )
 
                 return response
+
             response["Type"] = "release"
             response["Message"] = (
                 "The amount entered is below the minimum required. Please enter an amount greater than GHC 10.00"
             )
-            response["Item"] = None
             response["DataType"] = "display"
             response["FieldType"] = "text"
 
@@ -81,7 +84,7 @@ async def service_interaction(request: HubtelRequest):
             f"Unexpected error while processing request for SessionId {request.SessionId}: {str(e)}"
         )
         response["Message"] = (
-            f"An unexpected error occurred. Please contact customer care at {CUSTOMER_CARE_NUMBER} for assistance. Details: {str(e)}"
+            f"An unexpected error occurred. Please contact customer care at {CUSTOMER_CARE_NUMBER} for assistance"
         )
         response["Type"] = "release"
         response["DataType"] = "display"
