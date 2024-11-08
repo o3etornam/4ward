@@ -62,7 +62,8 @@ async def service_interaction(request: HubtelRequest):
         response["Type"] = "release"
         response["DataType"] = "display"
         response["FieldType"] = "text"
-        cache.pop(request.SessionId)
+        if cache.get(request.SessionId):
+            cache.pop(request.SessionId)
         return response
 
     except Exception as e:
@@ -75,7 +76,8 @@ async def service_interaction(request: HubtelRequest):
         response["Type"] = "release"
         response["DataType"] = "display"
         response["FieldType"] = "text"
-        cache.pop(request.SessionId)
+        if cache.get(request.SessionId):
+            cache.pop(request.SessionId)
         return response
 
 

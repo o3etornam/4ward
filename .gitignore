@@ -6,3 +6,4 @@ Dockerfile
 .github
 .dockerignore
 *.pem
+instructions.md
